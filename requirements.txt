@@ -4,3 +4,5 @@ pandas
 plotly
 lxml
 requests
+matplotlib
+
