@@ -64,11 +64,15 @@ with st.sidebar:
         # 顯示清單時，將股數換回仟股顯示
         display_data = pd.DataFrame(st.session_state.portfolio)
         display_data['仟股'] = display_data['shares'] / 1000
+        # 【修正點】: 替換掉舊的 column_names 參數，改用 column_config 
         st.dataframe(
             display_data[['symbol', '仟股']],
             hide_index=True,
             use_container_width=True,
-            column_names=['代碼', '仟股']
+            column_config={
+                "symbol": "代碼", # 將內部欄位名稱 "symbol" 映射為 "代碼"
+                "仟股": "仟股"   # 將內部欄位名稱 "仟股" 映射為 "仟股"
+            }
         )
     else:
         st.info("目前清單為空")
