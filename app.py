@@ -11,12 +11,13 @@ st.set_page_config(page_title="多檔股息月曆", page_icon="📅", layout="wi
 if 'portfolio' not in st.session_state:
     st.session_state.portfolio = []
 
-# --- 2. 側邊欄：新增股票 ---
+# --- 2. 側邊欄：新增股票與輸入參數 ---
 with st.sidebar:
     st.header("➕ 新增股票到投組")
     
-    # 預設值改為 0050 方便測試
-    input_ticker = st.text_input("股票代碼", value="0050", help="台股請輸入數字 (如 2330)，美股輸入代號 (如 AAPL)")
+    input_ticker = st.text_input("股票代碼", value="0050", help="台股輸入數字或代號(如 00679B)，美股輸入代號(如 AAPL)")
+    
+    # 【仟股修正點 1】改用仟股 (K Shares) 輸入
     input_k_shares = st.number_input(
         "持有股數 (仟股, K Shares)",
         min_value=0.001,       # 最小輸入值為 0.001 仟股 (即 1 股)
@@ -25,25 +26,32 @@ with st.sidebar:
         format="%.3f"          # 顯示到小數點後三位
     )
     
-    shares = input_k_shares * 1000
+    # 計算實際股數 (Shares)
+    actual_shares = input_k_shares * 1000
     
     col1, col2 = st.columns(2)
     
-if col1.button("加入清單", type="primary"):
-    # 簡單的代碼處理
-    ticker_clean = input_ticker.strip().upper()
-    if ticker_clean.isdigit(): # <-- 這裡判斷有問題
-        ticker_clean = f"{ticker_clean}.TW"
-            
-        # 檢查是否重複
-    if any(d['symbol'] == ticker_clean for d in st.session_state.portfolio):
-            st.warning(f"{ticker_clean} 已經在清單中囉！")
-    else:
+    if col1.button("加入清單", type="primary"):
+        # 步驟 1: 清理並準備代碼
+        ticker_clean = input_ticker.strip().upper()
+        
+        # 步驟 2: 建立最終的搜尋代碼 (Search Symbol)
+        search_symbol = ticker_clean
+        
+        # 【代碼修正點】
+        # 判斷是否為台股：如果代碼中沒有句點，且是純數字或數字+字母，則加上 .TW
+        if "." not in search_symbol and search_symbol.isalnum():
+            search_symbol = f"{search_symbol}.TW"
+        
+        # 步驟 3: 檢查是否重複，並加入清單
+        if any(d['symbol'] == search_symbol for d in st.session_state.portfolio):
+            st.warning(f"{search_symbol} 已經在清單中囉！")
+        else:
             st.session_state.portfolio.append({
-                "symbol": ticker_clean,
-                "shares": input_shares
+                "symbol": search_symbol,
+                "shares": actual_shares  # 儲存實際股數
             })
-            st.success(f"已新增 {ticker_clean}")
+            st.success(f"已新增 {search_symbol} ({actual_shares:,.0f} 股)")
 
     if col2.button("清空全部"):
         st.session_state.portfolio = []
@@ -53,16 +61,24 @@ if col1.button("加入清單", type="primary"):
     st.divider()
     st.subheader(f"目前追蹤 ({len(st.session_state.portfolio)})")
     if st.session_state.portfolio:
-        portfolio_df = pd.DataFrame(st.session_state.portfolio)
-        st.dataframe(portfolio_df, hide_index=True, use_container_width=True)
+        # 顯示清單時，將股數換回仟股顯示
+        display_data = pd.DataFrame(st.session_state.portfolio)
+        display_data['仟股'] = display_data['shares'] / 1000
+        st.dataframe(
+            display_data[['symbol', '仟股']],
+            hide_index=True,
+            use_container_width=True,
+            column_names=['代碼', '仟股']
+        )
     else:
         st.info("目前清單為空")
 
 # --- 3. 核心邏輯：計算多檔股票 (已修正時區問題) ---
+@st.cache_data
 def calculate_portfolio_dividends(portfolio_list):
     all_payouts = []
     
-    # [修正點 1] 設定基準時間為 UTC，確保有時區資訊
+    # [時區修正點 1] 設定基準時間為 UTC，確保有時區資訊
     end_date = pd.Timestamp.now(tz='UTC')
     start_date = end_date - pd.DateOffset(months=12)
     
@@ -80,13 +96,16 @@ def calculate_portfolio_dividends(portfolio_list):
             divs = stock.dividends
             
             if not divs.empty:
-                # [修正點 2] 統一處理 yfinance 回傳的時間索引
-                # 如果資料沒有時區 (tz-naive)，加上 UTC
-                if divs.index.tz is None:
-                    divs.index = divs.index.tz_localize('UTC')
+                # [時區修正點 2] 統一處理 yfinance 回傳的時間索引
+                divs_index = divs.index
+                if divs_index.tz is None:
+                    # 如果資料沒有時區，假設 UTC
+                    divs_index = divs_index.tz_localize('UTC')
                 else:
-                    # 如果資料已有時區 (tz-aware)，轉成 UTC 以便統一比較
-                    divs.index = divs.index.tz_convert('UTC')
+                    # 如果資料已有時區，轉成 UTC 以便統一比較
+                    divs_index = divs_index.tz_convert('UTC')
+                
+                divs.index = divs_index
                 
                 # 進行篩選
                 recent_divs = divs[divs.index >= start_date]
@@ -123,14 +142,19 @@ if not st.session_state.portfolio:
     st.warning("👈 請先在左側側邊欄新增股票代碼！")
 else:
     if st.button("開始計算分析 🚀", use_container_width=True):
+        
+        # 由於 Streamlit Cloud 部署後，Session State 的物件可能無法直接被 cache，
+        # 這裡將清單轉為元組，確保 @st.cache_data 能正常工作
+        portfolio_tuple = tuple((d['symbol'], d['shares']) for d in st.session_state.portfolio)
+        
         with st.spinner("正在分析投資組合..."):
-            df_result = calculate_portfolio_dividends(st.session_state.portfolio)
+            # 傳遞轉換後的 tuple 給 cache 函數
+            df_result = calculate_portfolio_dividends(portfolio_tuple)
             
             if df_result.empty:
                 st.warning("這段期間內，您的投資組合似乎沒有任何配息紀錄。")
             else:
                 # --- 資料處理：轉置成 月份表 ---
-                # 建立 1~12 月的完整結構
                 months_range = list(range(1, 13))
                 
                 # Pivot Table: Index=股票, Columns=月份, Values=金額
@@ -170,7 +194,6 @@ else:
                 
                 # 2. 每月配息長條圖
                 st.subheader("📊 每月領息分佈圖")
-                # 準備畫圖資料 (排除最後一個 Total 欄位)
                 chart_data = monthly_totals.drop('Total').reset_index()
                 chart_data.columns = ['Month', 'Income']
                 
@@ -184,14 +207,13 @@ else:
                     color='Income',
                     color_continuous_scale='Greens'
                 )
-                # 強制 X 軸顯示 1-12
                 fig.update_layout(xaxis = dict(tickmode = 'linear', tick0 = 1, dtick = 1))
                 st.plotly_chart(fig, use_container_width=True)
                 
                 # 3. 詳細表格 (熱點圖)
                 st.subheader("📋 各股每月配息明細表")
                 
-                # 格式化表格顯示
+                # 格式化表格顯示 (需依賴 matplotlib)
                 st.dataframe(
                     pivot_df.style.format("{:,.0f}").background_gradient(cmap="Greens", axis=None),
                     use_container_width=True,
