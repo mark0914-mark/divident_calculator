@@ -15,7 +15,7 @@ if 'portfolio' not in st.session_state:
 with st.sidebar:
     st.header("➕ 新增股票到投組")
     
-    input_ticker = st.text_input("股票代碼", value="0050", help="台股輸入數字或代號(如 00679B)，美股輸入代號(如 AAPL)")
+    input_ticker = st.text_input("股票代碼", value="0050", help="台股輸入數字或代號(如 0050 or 00679B.TWO)，美股輸入代號(如 AAPL)")
     
     # 單位從「股」改為「仟股」(K Shares)，並允許小數點後三位輸入
     input_k_shares = st.number_input(
