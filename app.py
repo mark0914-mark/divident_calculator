@@ -226,7 +226,7 @@ else:
             # 應用樣式
             styled_df = display_pivot_df.style \
                 .format("{:,.0f}") \
-                .background_gradient(cmap="algae", axis=None) \
+                .background_gradient(cmap="Greens", axis=None) \
                 .apply(highlight_total_row, axis=1)
                 
             st.dataframe(
