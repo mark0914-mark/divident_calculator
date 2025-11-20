@@ -22,11 +22,10 @@ with st.sidebar:
     col1, col2 = st.columns(2)
     
 if col1.button("加入清單", type="primary"):
-    # 步驟 1: 清理並準備代碼
+    # 簡單的代碼處理
     ticker_clean = input_ticker.strip().upper()
-    
-    # 步驟 2: 建立最終的搜尋代碼 (Search Symbol)
-    search_symbol = ticker_clean
+    if ticker_clean.isdigit(): # <-- 這裡判斷有問題
+        ticker_clean = f"{ticker_clean}.TW"
             
         # 檢查是否重複
     if any(d['symbol'] == ticker_clean for d in st.session_state.portfolio):
