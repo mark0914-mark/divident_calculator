@@ -17,7 +17,15 @@ with st.sidebar:
     
     # 預設值改為 0050 方便測試
     input_ticker = st.text_input("股票代碼", value="0050", help="台股請輸入數字 (如 2330)，美股輸入代號 (如 AAPL)")
-    input_shares = st.number_input("持有股數", min_value=1, value=1000, step=100)
+    input_k_shares = st.number_input(
+        "持有股數 (仟股, K Shares)",
+        min_value=0.001,       # 最小輸入值為 0.001 仟股 (即 1 股)
+        value=1.000,           # 預設值改為 1 仟股
+        step=0.001,            # 步長為 0.001 仟股 (即 1 股)
+        format="%.3f"          # 顯示到小數點後三位
+    )
+    
+    shares = input_k_shares * 1000
     
     col1, col2 = st.columns(2)
     
