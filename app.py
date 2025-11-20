@@ -5,7 +5,7 @@ import plotly.express as px
 from datetime import datetime
 
 # --- 1. 網頁設定與狀態初始化 ---
-st.set_page_config(page_title="多檔股息月曆", page_icon="📅", layout="wide")
+st.set_page_config(page_title="存股族利器!計算每月配息金額", page_icon="📅", layout="wide")
 
 # 初始化 Session State 來儲存股票清單
 if 'portfolio' not in st.session_state:
@@ -13,7 +13,7 @@ if 'portfolio' not in st.session_state:
 
 # --- 2. 側邊欄：新增股票與輸入參數 ---
 with st.sidebar:
-    st.header("➕ 新增股票到投組")
+    st.header("➕ 新增股票到投資組合")
     
     input_ticker = st.text_input("股票代碼", value="0050", help="台股輸入數字或代號(如 0050 or 00679B.TWO)，美股輸入代號(如 AAPL)")
     
