@@ -81,16 +81,11 @@ with st.sidebar:
             col_sym.write(symbol)
             col_shares.write(f"{shares_k:,.3f}") # 格式化為小數點後三位
 
-            # 【修正點】: 在 col_del 內使用巢狀 columns 實現置中
-            with col_del:
-                # 比例 [空白, 按鈕, 空白] = [1, 1, 1]，讓按鈕居中
-                c_left, c_btn, c_right = st.columns([1, 1, 1])
-                
-                # 將按鈕放在中間的 c_btn 欄位
-                if c_btn.button("❌", key=f"remove_{symbol}_{i}"):
-                    # 刪除該索引位置的項目
-                    del st.session_state.portfolio[i]
-                    st.rerun() # 重新執行腳本以更新顯示
+            # 移除按鈕 (必須使用唯一的 key)
+            if col_del.button("❌", key=f"remove_{symbol}_{i}"):
+                # 刪除該索引位置的項目
+                del st.session_state.portfolio[i]
+                st.rerun() # 重新執行腳本以更新顯示
     else:
         st.info("目前清單為空")
 # --- 側邊欄結束 ---
@@ -205,6 +200,7 @@ else:
             chart_data = monthly_totals.drop('Total').reset_index()
             chart_data.columns = ['Month', 'Income']
             
+            # 【修正點】: 更換色階以避免白色
             fig = px.bar(
                 chart_data,
                 x='Month',
