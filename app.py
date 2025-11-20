@@ -209,7 +209,7 @@ else:
                 title="每月總配息金額",
                 labels={'Income': '金額 ($)', 'Month': '月份'},
                 color='Income',
-                color_continuous_scale='Greens'
+                color_continuous_scale='algae'
             )
             fig.update_layout(xaxis = dict(tickmode = 'linear', tick0 = 1, dtick = 1))
             st.plotly_chart(fig, use_container_width=True)
@@ -226,7 +226,7 @@ else:
             # 應用樣式
             styled_df = display_pivot_df.style \
                 .format("{:,.0f}") \
-                .background_gradient(cmap="Greens", axis=None) \
+                .background_gradient(cmap="algae", axis=None) \
                 .apply(highlight_total_row, axis=1)
                 
             st.dataframe(
