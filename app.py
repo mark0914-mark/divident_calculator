@@ -29,9 +29,9 @@ if col1.button("加入清單", type="primary"):
     search_symbol = ticker_clean
             
         # 檢查是否重複
-        if any(d['symbol'] == ticker_clean for d in st.session_state.portfolio):
+    if any(d['symbol'] == ticker_clean for d in st.session_state.portfolio):
             st.warning(f"{ticker_clean} 已經在清單中囉！")
-        else:
+    else:
             st.session_state.portfolio.append({
                 "symbol": ticker_clean,
                 "shares": input_shares
