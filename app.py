@@ -16,7 +16,7 @@ with st.sidebar:
     st.header("➕ 新增股票到投組")
     
     # 預設值改為 0050 方便測試
-    input_ticker = st.text_input("股票代碼", value="0050", help="台股請輸入數字 (如 2330)，美股輸入代號 (如 AAPL)")
+    input_ticker = st.text_input("股票代碼", value="0050", help="台股請輸入數字 (如 2330;00679B.TWO)，美股輸入代號 (如 AAPL)")
     input_shares = st.number_input("持有股數", min_value=1, value=1000, step=100)
     
     col1, col2 = st.columns(2)
