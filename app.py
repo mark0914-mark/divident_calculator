@@ -5,7 +5,7 @@ import plotly.express as px
 from datetime import datetime
 
 # --- 1. 網頁設定與狀態初始化 ---
-st.set_page_config(page_title="存股族福音!計算每月領息金額", page_icon="📅", layout="wide")
+st.set_page_config(page_title="存股族福音!計算每月幫自己加薪多少", page_icon="📅", layout="wide")
 
 # 初始化 Session State 來儲存股票清單
 if 'portfolio' not in st.session_state:
