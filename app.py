@@ -146,7 +146,7 @@ def calculate_portfolio_dividends(portfolio_list):
     return pd.DataFrame(all_payouts)
 
 # --- 4. 主畫面顯示 ---
-st.title("📅 每月領息金額")
+st.title("📅 每月領息金額 (NTD)")
 st.caption("計算邏輯：基於**過去 12 個月**的實際配息紀錄，推算若持有相同股數，各月份可領取的金額。")
 
 if not st.session_state.portfolio:
