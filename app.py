@@ -21,7 +21,7 @@ with st.sidebar:
     
     col1, col2 = st.columns(2)
     
-   if col1.button("加入清單", type="primary"):
+if col1.button("加入清單", type="primary"):
     # 步驟 1: 清理並準備代碼
     ticker_clean = input_ticker.strip().upper()
     
