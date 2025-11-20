@@ -56,7 +56,7 @@ with st.sidebar:
         st.session_state.portfolio = []
         st.rerun()
 
-    # --- 【修正點】: 移除功能 ---
+    # --- 顯示與移除功能 ---
     st.divider()
     st.subheader(f"目前追蹤 ({len(st.session_state.portfolio)})")
     
@@ -81,11 +81,16 @@ with st.sidebar:
             col_sym.write(symbol)
             col_shares.write(f"{shares_k:,.3f}") # 格式化為小數點後三位
 
-            # 移除按鈕 (必須使用唯一的 key)
-            if col_del.button("❌", key=f"remove_{symbol}_{i}"):
-                # 刪除該索引位置的項目
-                del st.session_state.portfolio[i]
-                st.rerun() # 重新執行腳本以更新顯示
+            # 【修正點】: 在 col_del 內使用巢狀 columns 實現置中
+            with col_del:
+                # 比例 [空白, 按鈕, 空白] = [1, 1, 1]，讓按鈕居中
+                c_left, c_btn, c_right = st.columns([1, 1, 1])
+                
+                # 將按鈕放在中間的 c_btn 欄位
+                if c_btn.button("❌", key=f"remove_{symbol}_{i}"):
+                    # 刪除該索引位置的項目
+                    del st.session_state.portfolio[i]
+                    st.rerun() # 重新執行腳本以更新顯示
     else:
         st.info("目前清單為空")
 # --- 側邊欄結束 ---
@@ -154,7 +159,6 @@ if not st.session_state.portfolio:
 else:
     if st.button("開始計算分析 🚀", use_container_width=True):
         
-        # 由於我們使用了方案一 (移除快取)，這裡直接傳入清單
         df_result = calculate_portfolio_dividends(st.session_state.portfolio)
         
         if df_result.empty:
@@ -209,7 +213,7 @@ else:
                 title="每月總配息金額",
                 labels={'Income': '金額 ($)', 'Month': '月份'},
                 color='Income',
-                color_continuous_scale='algae'
+                color_continuous_scale='algae' 
             )
             fig.update_layout(xaxis = dict(tickmode = 'linear', tick0 = 1, dtick = 1))
             st.plotly_chart(fig, use_container_width=True)
